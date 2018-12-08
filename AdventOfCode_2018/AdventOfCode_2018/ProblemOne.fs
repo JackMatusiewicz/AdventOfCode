@@ -1067,21 +1067,21 @@ module ProblemOne =
         go 0
 
     let findFirstDuplicate (data : int seq) : int =
-        let update (state : Set<int> * (int Option) * int) (a : int) =
-            let (seen,firstDupe,acc) = state
+        let update (state : Set<int> * (int Option)) (a : int) =
+            let (seen,firstDupe) = state
             match firstDupe with
             | Some v -> state
             | None ->
-                let acc = acc + a
-                if Set.contains acc seen then
-                    (seen, Some acc, acc)
+                if Set.contains a seen then
+                    (seen, Some a)
                 else
-                    (Set.add acc seen, None, acc)
+                    (Set.add a seen, None)
         
-        Seq.scan update (Set.empty, None, 0) data
-        |> Seq.skipWhile (fun (_,s,_) -> Option.isNone s)
+        Seq.scan (+) 0 data
+        |> Seq.scan update (Set.empty, None)
+        |> Seq.skipWhile (fun (_,s) -> Option.isNone s)
         |> Seq.head
-        |> fun (_, Some s, _) -> s
+        |> fun (_, Some s) -> s
 
     let partTwo (getData : unit -> string array) : int =
         getData ()
