@@ -1,6 +1,5 @@
 ﻿namespace AdventOfCode
 
-open System.IO
 
 module ProblemOne =
 
@@ -1033,15 +1032,60 @@ module ProblemOne =
 -137490
 """
 
-    let solve (getTestData : string -> string array) (filePath : string) : int =
-        getTestData filePath
+    let partOne (getData : unit -> string array) : int =
+        getData ()
         |> Array.map int
         |> Array.sum
 
-    let result () =
-        let parseData =
-            fun _ ->
-                testData.Replace("\r\n", "\n").Split [|'\n'|]
-                |> Array.filter ((<>) "")
-                
-        solve parseData "filePathHere"
+    let parseData =
+        fun () ->
+            testData.Replace("\r\n", "\n").Split [|'\n'|]
+            |> Array.filter ((<>) "")
+
+    let findFirstRepeatingElement (data : int array) : int option =
+        let rec go (seen : int Set) (index : int) =
+            if index >= data.Length then
+                None
+            else
+                let v = data.[index]
+                if Set.contains v seen then
+                    Some v
+                else
+                    go (Set.add v seen) (index + 1)
+        go Set.empty 0
+
+
+    let toInfiniteSeq (data : 'a array) : 'a seq =
+        let rec go (index : int) =
+            seq {
+                if index >= data.Length then
+                    yield! go 0
+                else
+                    yield data.[index]
+                    yield! go (index + 1)
+            }
+        go 0
+
+    let findFirstDuplicate (data : int seq) : int =
+        let update (state : Set<int> * (int Option) * int) (a : int) =
+            let (seen,firstDupe,acc) = state
+            match firstDupe with
+            | Some v -> state
+            | None ->
+                let acc = acc + a
+                if Set.contains acc seen then
+                    (seen, Some acc, acc)
+                else
+                    (Set.add acc seen, None, acc)
+        
+        Seq.scan update (Set.empty, None, 0) data
+        |> Seq.skipWhile (fun (_,s,_) -> Option.isNone s)
+        |> Seq.head
+        |> fun (_, Some s, _) -> s
+
+    let partTwo (getData : unit -> string array) : int =
+        getData ()
+        |> Array.map int
+        |> toInfiniteSeq
+        |> findFirstDuplicate
+        
