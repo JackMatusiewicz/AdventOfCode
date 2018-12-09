@@ -275,7 +275,13 @@ kqzxdencllcsthbmgvyioflarp
         m
         |> Map.toList
         |> List.map snd
-        |> List.fold (fun ((twice, thrice) as v)-> function | 2 -> (true, thrice) | 3 -> (twice, true) | _ -> v) (false, false)
+        |> List.fold
+            (fun ((twice, thrice) as v) ->
+                function
+                    | 2 -> (true, thrice)
+                    | 3 -> (twice, true)
+                    | _ -> v)
+            (false, false)
         |> fun (twice, thrice) -> { Twice = twice; Thrice = thrice }
 
     let calculateChecksum (ids : string list) =
@@ -290,3 +296,33 @@ kqzxdencllcsthbmgvyioflarp
         partOneData.Replace("\r\n", "\n").Split [|'\n'|]
         |> List.ofArray
         |> calculateChecksum
+
+    let differsByOne (a : char array) (b : char array) =
+        Array.zip a b
+        |> Array.filter ((<||) (<>))
+        |> Array.length = 1
+
+    let findIntersectingCharacters (a : char array) (b : char array) : char array =
+        Array.zip a b
+        |> Array.filter ((<||) (=))
+        |>  Array.map fst
+
+    // Has absolutely no bounds checking, but we know a value has to exist.
+    // Definitely not "prod ready" code
+    let findMatchingPair (s : string array) =
+        let data = Array.map (fun (s : string) -> s.ToCharArray ()) s
+
+        let rec go (acc : char array array) (index : int) =
+            Array.map (fun w -> differsByOne acc.[index] w) acc
+            |> Array.tryFindIndex ((=) true)
+            |> function
+                | Some v -> findIntersectingCharacters acc.[v] acc.[index]
+                | None -> go acc (index + 1)
+
+        go data 0
+
+    let partTwo () =
+        partOneData.Replace("\r\n", "\n").Split [|'\n'|]
+        |> Array.filter ((<>) "")
+        |> findMatchingPair
+        |> fun s -> new string(s)

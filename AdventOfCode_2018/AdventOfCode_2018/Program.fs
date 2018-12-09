@@ -2,6 +2,6 @@
 
 [<EntryPoint>]
 let main argv =
-    let r = ProblemTwo.partOne ()
-    printfn "%d" r
+    let r = ProblemTwo.partTwo ()
+    printfn "%s" r
     0 // return an integer exit code
